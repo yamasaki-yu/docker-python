@@ -56,9 +56,9 @@ pipeline {
       // TODO(rosbo) don't set `nvidia` as the default runtime and use the
       // `--runtime=nvidia` flag for the `docker run` command when GPU support is needed.
       agent { label 'ephemeral-linux-gpu' }
-      options {
-        timeout(time: 45, unit: 'MINUTES')
-      }
+      // options {
+      //   timeout(time: 45, unit: 'MINUTES')
+      // }
       steps {
         sh '''#!/bin/bash
           set -exo pipefail
