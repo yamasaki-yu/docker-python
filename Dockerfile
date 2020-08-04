@@ -47,7 +47,7 @@ RUN conda config --add channels conda-forge && \
     conda install matplotlib basemap cartopy python-igraph imagemagick "pysal==2.1.0" && \
     # b/142337634#comment22 pin required to avoid torchaudio downgrade.
     # b/162357958##comment7 Upgrade once new versions of torch* libs are released for pytorch 1.6.
-    conda install "pytorch=1.5" "torchvision=0.6" "torchaudio=0.5" "torchtext=0.6" cpuonly && \
+    conda install "pytorch=1.6" "torchvision=0.7" "torchaudio=0.6" "torchtext=0.7" cpuonly && \
     /tmp/clean-layer.sh
 
 # The anaconda base image includes outdated versions of these packages. Update them to include the latest version.
