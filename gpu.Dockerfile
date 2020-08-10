@@ -16,8 +16,8 @@ RUN sed -i 's/deb https:\/\/developer.download.nvidia.com/deb http:\/\/developer
 # Ensure the cuda libraries are compatible with the custom Tensorflow wheels.
 # TODO(b/120050292): Use templating to keep in sync or COPY installed binaries from it.
 ENV CUDA_MAJOR_VERSION=10
-ENV CUDA_MINOR_VERSION=1
-ENV CUDA_PATCH_VERSION=243
+ENV CUDA_MINOR_VERSION=0
+ENV CUDA_PATCH_VERSION=130
 ENV CUDA_VERSION=$CUDA_MAJOR_VERSION.$CUDA_MINOR_VERSION.$CUDA_PATCH_VERSION
 ENV CUDA_PKG_VERSION=$CUDA_MAJOR_VERSION-$CUDA_MINOR_VERSION=$CUDA_VERSION-1
 LABEL com.nvidia.volumes.needed="nvidia_driver"
@@ -56,13 +56,7 @@ RUN apt-get install -y ocl-icd-libopencl1 clinfo libboost-all-dev && \
     echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd && \
     /tmp/clean-layer.sh
 
-# When using pip in a conda environment, conda commands should be ran first and then
-# the remaining pip commands: https://www.anaconda.com/using-pip-in-a-conda-environment/
-# However, because this image is based on the CPU image, this isn't possible but better
-# to put them at the top of this file to minize conflicts.
-RUN conda remove --force -y pytorch torchvision torchaudio cpuonly && \
-    conda install "pytorch=1.5" "torchvision=0.6" "torchaudio=0.5" "torchtext=0.6" cudatoolkit=$CUDA_VERSION && \
-    /tmp/clean-layer.sh
+
 
 # Install LightGBM with GPU
 RUN pip uninstall -y lightgbm && \
@@ -101,6 +95,14 @@ RUN pip uninstall -y tensorflow && \
     # b/126259508 --no-deps prevents numpy from being downgraded.
     pip install --no-deps mxnet-cu$CUDA_MAJOR_VERSION$CUDA_MINOR_VERSION && \
     /tmp/clean-layer.sh
+    
+# When using pip in a conda environment, conda commands should be ran first and then
+# the remaining pip commands: https://www.anaconda.com/using-pip-in-a-conda-environment/
+# However, because this image is based on the CPU image, this isn't possible but better
+# to put them at the top of this file to minize conflicts.
+RUN conda remove --force -y pytorch torchvision torchaudio cpuonly && \
+    conda install "pytorch=1.5" "torchvision=0.6" "torchaudio=0.5" "torchtext=0.6" cudatoolkit=$CUDA_VERSION && \
+    /tmp/clean-layer.sh
 
  # Reinstall TensorFlow addons (TFA) with GPU support.
 COPY --from=tensorflow_whl /tmp/tfa_gpu/*.whl /tmp/tfa_gpu/
@@ -121,3 +123,6 @@ RUN pip install pycuda && \
 
 # Remove the CUDA stubs.
 ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH_NO_STUBS"
+
+# ポートの公開
+EXPOSE 8888
