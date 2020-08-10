@@ -56,7 +56,13 @@ RUN apt-get install -y ocl-icd-libopencl1 clinfo libboost-all-dev && \
     echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd && \
     /tmp/clean-layer.sh
 
-
+# When using pip in a conda environment, conda commands should be ran first and then
+# the remaining pip commands: https://www.anaconda.com/using-pip-in-a-conda-environment/
+# However, because this image is based on the CPU image, this isn't possible but better
+# to put them at the top of this file to minize conflicts.
+RUN conda remove --force -y pytorch torchvision torchaudio cpuonly && \
+    conda install "pytorch=1.5" "torchvision=0.6" "torchaudio=0.5" "torchtext=0.6" cudatoolkit=$CUDA_VERSION && \
+    /tmp/clean-layer.sh
 
 # Install LightGBM with GPU
 RUN pip uninstall -y lightgbm && \
@@ -94,17 +100,11 @@ RUN pip uninstall -y tensorflow && \
     pip uninstall -y mxnet && \
     # b/126259508 --no-deps prevents numpy from being downgraded.
     pip install --no-deps mxnet-cu$CUDA_MAJOR_VERSION$CUDA_MINOR_VERSION && \
-    /tmp/clean-layer.sh
-    
-# When using pip in a conda environment, conda commands should be ran first and then
-# the remaining pip commands: https://www.anaconda.com/using-pip-in-a-conda-environment/
-# However, because this image is based on the CPU image, this isn't possible but better
-# to put them at the top of this file to minize conflicts.
-RUN conda remove --force -y pytorch torchvision torchaudio cpuonly && \
+    conda remove --force -y pytorch torchvision torchaudio cpuonly && \
     conda install "pytorch=1.5" "torchvision=0.6" "torchaudio=0.5" "torchtext=0.6" cudatoolkit=$CUDA_VERSION && \
     /tmp/clean-layer.sh
-
- # Reinstall TensorFlow addons (TFA) with GPU support.
+    
+# Reinstall TensorFlow addons (TFA) with GPU support.
 COPY --from=tensorflow_whl /tmp/tfa_gpu/*.whl /tmp/tfa_gpu/
 RUN pip install /tmp/tfa_gpu/tensorflow*.whl && \
     rm -rf /tmp/tfa_gpu/ && \
